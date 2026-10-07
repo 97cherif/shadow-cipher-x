@@ -4,221 +4,336 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shadow Cipher X</title>
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-
+:root{
+  --bg:#0c0b10;
+  --panel:#15141b;
+  --field:#0f0e14;
+  --line:#2a2833;
+  --text:#ece9f2;
+  --muted:#8d89a0;
+  --accent:#ff4d5e;
+  --accent-dark:#d93546;
+  --ok:#5ad1a0;
+  --sans:'Sora',system-ui,-apple-system,'Segoe UI',Verdana,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
 body{
-    background:#0d0d0d;
-    color:white;
-    font-family:Verdana;
-    padding:30px;
+  margin:0;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  line-height:1.55;
+  padding:clamp(20px,5vw,56px) 16px 40px;
+}
+main{max-width:640px;margin:0 auto}
+
+header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.mark{
+  flex:none;width:52px;height:52px;border-radius:14px;
+  background:var(--accent);display:grid;place-items:center;
+}
+.mark svg{width:28px;height:28px}
+h1{margin:0;font-size:clamp(1.6rem,5vw,2.1rem);font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.tagline{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:clamp(18px,4vw,28px);
 }
 
-h1{
-    text-align:center;
-    color:#ff4444;
+.tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;
+  background:var(--field);border:1px solid var(--line);
+  border-radius:12px;padding:4px;margin-bottom:24px;
 }
-
-.container{
-    background:#1b1b1b;
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:20px;
+.tab{
+  margin:0;padding:11px 12px;border:0;border-radius:9px;
+  background:transparent;color:var(--muted);
+  font:600 .95rem var(--sans);cursor:pointer;
+  transition:background .2s,color .2s;
 }
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{background:var(--accent);color:#fff}
 
-textarea,input{
-    width:100%;
-    margin-top:10px;
-    padding:10px;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
+label{display:block;font-size:.85rem;font-weight:600;color:var(--muted);margin:0 0 8px}
+.field{margin-bottom:20px}
+
+.key-wrap{position:relative}
+input,textarea{
+  width:100%;
+  background:var(--field);color:var(--text);
+  border:1px solid var(--line);border-radius:10px;
+  padding:13px 14px;font:400 1rem var(--sans);
+  transition:border-color .2s,box-shadow .2s;
 }
-
-textarea{
-    height:120px;
-    resize:none;
+input{padding-right:76px}
+textarea{min-height:140px;resize:vertical}
+input::placeholder,textarea::placeholder{color:#5d5a6e}
+input:focus,textarea:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(255,77,94,.22);
 }
-
-button{
-    margin-top:10px;
-    padding:10px 20px;
-    border:none;
-    border-radius:8px;
-    background:#ff4444;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
+.toggle{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  margin:0;padding:7px 12px;border:0;border-radius:8px;
+  background:transparent;color:var(--muted);
+  font:600 .8rem var(--sans);cursor:pointer;
 }
+.toggle:hover{color:var(--text);background:var(--line)}
 
-button:hover{
-    background:#cc2222;
+.run{
+  width:100%;margin:0;padding:15px;border:0;border-radius:11px;
+  background:var(--accent);color:#fff;
+  font:700 1rem var(--sans);cursor:pointer;
+  transition:background .2s,transform .1s;
 }
+.run:hover{background:var(--accent-dark)}
+.run:active{transform:scale(.99)}
 
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+.out{margin-top:24px}
+.out-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.out-head span{font-size:.85rem;font-weight:600;color:var(--muted)}
+.copy{
+  margin:0;padding:6px 12px;border:1px solid var(--line);border-radius:8px;
+  background:transparent;color:var(--text);
+  font:600 .8rem var(--sans);cursor:pointer;
+}
+.copy:hover{border-color:var(--accent);color:var(--accent)}
+.copy[hidden]{display:none}
 .result{
-    margin-top:15px;
-    background:black;
-    padding:15px;
-    border-radius:8px;
-    min-height:40px;
-    word-wrap:break-word;
+  background:#000;border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;min-height:64px;
+  font:400 .9rem/1.6 var(--mono);
+  word-break:break-all;white-space:pre-wrap;
 }
+.result.empty{color:#5d5a6e;font-family:var(--sans)}
+.result.error{color:var(--accent);font-family:var(--sans);word-break:normal}
+.result.plain{font-family:var(--sans);font-size:1rem;word-break:break-word}
 
+.panel[hidden]{display:none}
+.foot{margin:22px 4px 0;text-align:center;color:var(--muted);font-size:.8rem}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+}
 </style>
 </head>
 
 <body>
+<main>
 
-<h1>🕶 Shadow Cipher X</h1>
+<header>
+  <div class="mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/>
+      <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>
+      <circle cx="12" cy="15.5" r="1.2" fill="#fff"/>
+    </svg>
+  </div>
+  <div>
+    <h1>Shadow Cipher X</h1>
+    <p class="tagline">Lock a message with a secret key. Only the same key can open it.</p>
+  </div>
+</header>
 
-<div class="container">
+<section class="card">
 
-    <h2>Encrypt</h2>
+  <div class="tabs" role="tablist" aria-label="Mode">
+    <button class="tab" role="tab" id="tab-enc" aria-selected="true" aria-controls="panel-enc" onclick="switchTab('enc')">Encrypt</button>
+    <button class="tab" role="tab" id="tab-dec" aria-selected="false" aria-controls="panel-dec" onclick="switchTab('dec')">Decrypt</button>
+  </div>
 
-    <input type="password" id="password" placeholder="Secret key">
+  <!-- ENCRYPT -->
+  <div class="panel" id="panel-enc" role="tabpanel" aria-labelledby="tab-enc">
+    <div class="field">
+      <label for="password">Secret key</label>
+      <div class="key-wrap">
+        <input type="password" id="password" placeholder="At least 4 characters" autocomplete="off">
+        <button class="toggle" type="button" onclick="toggleKey('password',this)">Show</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="msg">Message</label>
+      <textarea id="msg" placeholder="Type the message you want to hide"></textarea>
+    </div>
+    <button class="run" onclick="encrypt()">Encrypt message</button>
 
-    <textarea id="msg" placeholder="Type message..."></textarea>
+    <div class="out">
+      <div class="out-head">
+        <span>Encrypted text</span>
+        <button class="copy" id="copy-enc" hidden onclick="copyText('encryptResult','copy-enc')">Copy</button>
+      </div>
+      <div class="result empty" id="encryptResult" aria-live="polite">Your encrypted text will appear here.</div>
+    </div>
+  </div>
 
-    <button onclick="encrypt()">Encrypt</button>
+  <!-- DECRYPT -->
+  <div class="panel" id="panel-dec" role="tabpanel" aria-labelledby="tab-dec" hidden>
+    <div class="field">
+      <label for="password2">Secret key</label>
+      <div class="key-wrap">
+        <input type="password" id="password2" placeholder="The key used to encrypt" autocomplete="off">
+        <button class="toggle" type="button" onclick="toggleKey('password2',this)">Show</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="coded">Encrypted text</label>
+      <textarea id="coded" placeholder="Paste the encrypted text here"></textarea>
+    </div>
+    <button class="run" onclick="decrypt()">Decrypt message</button>
 
-    <div class="result" id="encryptResult"></div>
+    <div class="out">
+      <div class="out-head">
+        <span>Original message</span>
+        <button class="copy" id="copy-dec" hidden onclick="copyText('decryptResult','copy-dec')">Copy</button>
+      </div>
+      <div class="result empty" id="decryptResult" aria-live="polite">Your decrypted message will appear here.</div>
+    </div>
+  </div>
 
-</div>
+</section>
 
-<div class="container">
+<p class="foot">Everything happens in your browser. Your message and key are never sent anywhere.</p>
 
-    <h2>Decrypt</h2>
-
-    <input type="password" id="password2" placeholder="Secret key">
-
-    <textarea id="coded" placeholder="Paste encrypted text..."></textarea>
-
-    <button onclick="decrypt()">Decrypt</button>
-
-    <div class="result" id="decryptResult"></div>
-
-</div>
+</main>
 
 <script>
-
-//////////////////////////////////////////////////////
-// TEXT ENCODER
-//////////////////////////////////////////////////////
-
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-//////////////////////////////////////////////////////
-// CREATE AES KEY FROM PASSWORD
-//////////////////////////////////////////////////////
-
-async function getKey(password)
-{
-    const passwordBytes = encoder.encode(password);
-
-    const hash = await crypto.subtle.digest(
-        "SHA-256",
-        passwordBytes
-    );
-
-    return crypto.subtle.importKey(
-        "raw",
-        hash,
-        { name: "AES-GCM" },
-        false,
-        ["encrypt","decrypt"]
-    );
+/* ---------- Tabs ---------- */
+function switchTab(which){
+  const enc = which === 'enc';
+  document.getElementById('panel-enc').hidden = !enc;
+  document.getElementById('panel-dec').hidden = enc;
+  document.getElementById('tab-enc').setAttribute('aria-selected', enc);
+  document.getElementById('tab-dec').setAttribute('aria-selected', !enc);
 }
 
-//////////////////////////////////////////////////////
-// ENCRYPT
-//////////////////////////////////////////////////////
+/* ---------- Show / hide key ---------- */
+function toggleKey(id, btn){
+  const input = document.getElementById(id);
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.textContent = show ? 'Hide' : 'Show';
+}
 
-async function encrypt()
-{
-    const text = document.getElementById("msg").value;
-    const password = document.getElementById("password").value;
+/* ---------- Output helpers ---------- */
+function setResult(id, text, kind){
+  const el = document.getElementById(id);
+  el.className = 'result' + (kind ? ' ' + kind : '');
+  el.textContent = text;
+}
 
-    if(password.length < 4)
-    {
-        alert("Password too short");
-        return;
+// Scramble effect: characters settle into the real text from left to right
+function reveal(id, finalText, kind){
+  const el = document.getElementById(id);
+  el.className = 'result' + (kind ? ' ' + kind : '');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce || finalText.length > 4000){ el.textContent = finalText; return; }
+
+  const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=#$%&';
+  const frames = 28;
+  let frame = 0;
+  const timer = setInterval(() => {
+    frame++;
+    const settled = Math.floor(finalText.length * frame / frames);
+    let out = finalText.slice(0, settled);
+    for(let i = settled; i < finalText.length; i++){
+      out += /\s/.test(finalText[i]) ? finalText[i] : glyphs[Math.floor(Math.random()*glyphs.length)];
     }
+    el.textContent = out;
+    if(frame >= frames){ clearInterval(timer); el.textContent = finalText; }
+  }, 24);
+}
 
+async function copyText(id, btnId){
+  const text = document.getElementById(id).textContent;
+  const btn = document.getElementById(btnId);
+  try{
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied';
+  }catch(e){
+    btn.textContent = 'Press Ctrl+C';
+  }
+  setTimeout(() => btn.textContent = 'Copy', 1600);
+}
+
+/* ---------- Crypto (unchanged: AES-GCM, key = SHA-256 of password) ---------- */
+async function getKey(password){
+  const hash = await crypto.subtle.digest('SHA-256', encoder.encode(password));
+  return crypto.subtle.importKey('raw', hash, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+}
+
+async function encrypt(){
+  const text = document.getElementById('msg').value;
+  const password = document.getElementById('password').value;
+  const copyBtn = document.getElementById('copy-enc');
+
+  copyBtn.hidden = true;
+  if(password.length < 4){
+    setResult('encryptResult', 'The secret key needs at least 4 characters.', 'error');
+    return;
+  }
+  if(!text){
+    setResult('encryptResult', 'Type a message to encrypt.', 'error');
+    return;
+  }
+
+  try{
     const key = await getKey(password);
-
-    // random IV
     const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, encoder.encode(text));
 
-    const encrypted = await crypto.subtle.encrypt(
-        {
-            name: "AES-GCM",
-            iv: iv
-        },
-        key,
-        encoder.encode(text)
-    );
+    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(encrypted), iv.length);
 
-    // merge IV + encrypted data
-    const combined = new Uint8Array(
-        iv.length + encrypted.byteLength
-    );
-
-    combined.set(iv,0);
-    combined.set(new Uint8Array(encrypted),iv.length);
-
-    // convert to base64
-    const base64 = btoa(
-        String.fromCharCode(...combined)
-    );
-
-    document.getElementById("encryptResult").innerText = base64;
+    let binary = '';
+    combined.forEach(b => binary += String.fromCharCode(b));
+    reveal('encryptResult', btoa(binary));
+    copyBtn.hidden = false;
+  }catch(err){
+    setResult('encryptResult', 'Something went wrong while encrypting. Try again.', 'error');
+  }
 }
 
-//////////////////////////////////////////////////////
-// DECRYPT
-//////////////////////////////////////////////////////
+async function decrypt(){
+  const copyBtn = document.getElementById('copy-dec');
+  copyBtn.hidden = true;
 
-async function decrypt()
-{
-    try
-    {
-        const text = document.getElementById("coded").value;
-        const password = document.getElementById("password2").value;
+  const text = document.getElementById('coded').value.trim();
+  const password = document.getElementById('password2').value;
 
-        const key = await getKey(password);
+  if(!text || !password){
+    setResult('decryptResult', 'Enter the secret key and the encrypted text.', 'error');
+    return;
+  }
 
-        // decode base64
-        const bytes = Uint8Array.from(
-            atob(text),
-            c => c.charCodeAt(0)
-        );
+  try{
+    const key = await getKey(password);
+    const bytes = Uint8Array.from(atob(text), c => c.charCodeAt(0));
+    const iv = bytes.slice(0, 12);
+    const data = bytes.slice(12);
 
-        // extract IV
-        const iv = bytes.slice(0,12);
-
-        // encrypted data
-        const data = bytes.slice(12);
-
-        const decrypted = await crypto.subtle.decrypt(
-            {
-                name: "AES-GCM",
-                iv: iv
-            },
-            key,
-            data
-        );
-
-        document.getElementById("decryptResult").innerText =
-            decoder.decode(decrypted);
-    }
-    catch(err)
-    {
-        document.getElementById("decryptResult").innerText =
-            "Wrong key or corrupted data";
-    }
+    const decrypted = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data);
+    reveal('decryptResult', decoder.decode(decrypted), 'plain');
+    copyBtn.hidden = false;
+  }catch(err){
+    setResult('decryptResult', 'Could not decrypt. The key is wrong or the text was changed.', 'error');
+  }
 }
-
 </script>
 
 </body>
