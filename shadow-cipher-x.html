@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadow Cipher X</title>
+
+<style>
+
+body{
+    background:#0d0d0d;
+    color:white;
+    font-family:Verdana;
+    padding:30px;
+}
+
+h1{
+    text-align:center;
+    color:#ff4444;
+}
+
+.container{
+    background:#1b1b1b;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+}
+
+textarea,input{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+}
+
+textarea{
+    height:120px;
+    resize:none;
+}
+
+button{
+    margin-top:10px;
+    padding:10px 20px;
+    border:none;
+    border-radius:8px;
+    background:#ff4444;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#cc2222;
+}
+
+.result{
+    margin-top:15px;
+    background:black;
+    padding:15px;
+    border-radius:8px;
+    min-height:40px;
+    word-wrap:break-word;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🕶 Shadow Cipher X</h1>
+
+<div class="container">
+
+    <h2>Encrypt</h2>
+
+    <input type="password" id="password" placeholder="Secret key">
+
+    <textarea id="msg" placeholder="Type message..."></textarea>
+
+    <button onclick="encrypt()">Encrypt</button>
+
+    <div class="result" id="encryptResult"></div>
+
+</div>
+
+<div class="container">
+
+    <h2>Decrypt</h2>
+
+    <input type="password" id="password2" placeholder="Secret key">
+
+    <textarea id="coded" placeholder="Paste encrypted text..."></textarea>
+
+    <button onclick="decrypt()">Decrypt</button>
+
+    <div class="result" id="decryptResult"></div>
+
+</div>
+
+<script>
+
+//////////////////////////////////////////////////////
+// TEXT ENCODER
+//////////////////////////////////////////////////////
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+//////////////////////////////////////////////////////
+// CREATE AES KEY FROM PASSWORD
+//////////////////////////////////////////////////////
+
+async function getKey(password)
+{
+    const passwordBytes = encoder.encode(password);
+
+    const hash = await crypto.subtle.digest(
+        "SHA-256",
+        passwordBytes
+    );
+
+    return crypto.subtle.importKey(
+        "raw",
+        hash,
+        { name: "AES-GCM" },
+        false,
+        ["encrypt","decrypt"]
+    );
+}
+
+//////////////////////////////////////////////////////
+// ENCRYPT
+//////////////////////////////////////////////////////
+
+async function encrypt()
+{
+    const text = document.getElementById("msg").value;
+    const password = document.getElementById("password").value;
+
+    if(password.length < 4)
+    {
+        alert("Password too short");
+        return;
+    }
+
+    const key = await getKey(password);
+
+    // random IV
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+
+    const encrypted = await crypto.subtle.encrypt(
+        {
+            name: "AES-GCM",
+            iv: iv
+        },
+        key,
+        encoder.encode(text)
+    );
+
+    // merge IV + encrypted data
+    const combined = new Uint8Array(
+        iv.length + encrypted.byteLength
+    );
+
+    combined.set(iv,0);
+    combined.set(new Uint8Array(encrypted),iv.length);
+
+    // convert to base64
+    const base64 = btoa(
+        String.fromCharCode(...combined)
+    );
+
+    document.getElementById("encryptResult").innerText = base64;
+}
+
+//////////////////////////////////////////////////////
+// DECRYPT
+//////////////////////////////////////////////////////
+
+async function decrypt()
+{
+    try
+    {
+        const text = document.getElementById("coded").value;
+        const password = document.getElementById("password2").value;
+
+        const key = await getKey(password);
+
+        // decode base64
+        const bytes = Uint8Array.from(
+            atob(text),
+            c => c.charCodeAt(0)
+        );
+
+        // extract IV
+        const iv = bytes.slice(0,12);
+
+        // encrypted data
+        const data = bytes.slice(12);
+
+        const decrypted = await crypto.subtle.decrypt(
+            {
+                name: "AES-GCM",
+                iv: iv
+            },
+            key,
+            data
+        );
+
+        document.getElementById("decryptResult").innerText =
+            decoder.decode(decrypted);
+    }
+    catch(err)
+    {
+        document.getElementById("decryptResult").innerText =
+            "Wrong key or corrupted data";
+    }
+}
+
+</script>
+
+</body>
+</html>
